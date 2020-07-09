@@ -6,6 +6,7 @@ canvas.height = window.innerHeight;
 //pulse params
 const upper = 255;
 const lower = 100;
+const rate = 50;
 const startingSpeed = canvas.width/80;
 
 class Ball {
@@ -40,10 +41,12 @@ class Player{
         
         // listening to the mouse
         if(controller == 'player'){
+            let lock = false;
             canvas.addEventListener("mousemove", evt => {
                 let rect = canvas.getBoundingClientRect();
                 this.paddle.y = evt.clientY - rect.top - this.paddle.height/2;
-                socket.emit('paddle move', this.paddle.y);
+                if(!lock) socket.emit('paddle move', this.paddle.y);
+                setInterval(()=> lock = !lock, rate);
             });
         //}else if(controller == 'opponent'){
         }else if (controller == 'opponent'){
