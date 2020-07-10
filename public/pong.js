@@ -15,6 +15,7 @@ const upper = 255;
 const lower = 100;
 //emit rate
 const rate = 10;
+const polling = 10;
 //ball
 const startingSpeed = 0.01;
 
@@ -60,8 +61,7 @@ class Player{
                 let rect = canvas.getBoundingClientRect();
                 this.paddle.y = (evt.clientY-rect.top)/absHeight - this.paddle.height/2;
                 //if(!lock){
-                    socket.emit('paddle move', this.paddle.y);
-                //}
+                    //}
             });
         //}else if(controller == 'opponent'){
         }else if (controller == 'opponent'){
@@ -198,6 +198,7 @@ class Game {
     constructor(seat){
         this.fps = 60;
         this.paused = true;
+        this.frames = 0;
 
         this.side = seat.side;
         ratio = seat.ratio;
@@ -228,6 +229,11 @@ class Game {
     }
 
     update(){
+        if (this.frames == polling){
+            socket.emit('paddle move', this.paddle.y);
+            this.frames = 0;
+        }
+        this.frames++;
         if(this.ball.x - this.ball.radius < 0){
             if(this.p1.controller == 'player'){
                 this.p2.score++;
