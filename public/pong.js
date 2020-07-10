@@ -289,6 +289,11 @@ class Game {
         
         // when the this.ball collides with bottom and top walls we inverse the y velocity.
         if(this.ball.y - this.ball.radius < 0 || this.ball.y + this.ball.radius > height){
+            if(this.ball.velocityY < 0){
+                this.ball.y = this.ball.radius;
+            }else{
+                this.ball.y = height-this.ball.radius;
+            }
             this.ball.velocityY = -(this.ball.velocityY);
             //wall.play();
         }
