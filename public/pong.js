@@ -15,7 +15,7 @@ const upper = 255;
 const lower = 100;
 //emit rate
 const rate = 10;
-const polling = 10;
+const polling = 4;
 //ball
 const startingSpeed = 0.01;
 
@@ -160,7 +160,7 @@ class Renderer{
         pulse(this.paddleleft);
         pulse(this.paddleright);
         // clear the canvas
-        drawRect(0, 0, width, height, "rgba(0,0,0,0.1)");
+        drawRect(0, 0, width, height, "rgba(0,0,0,255)");
         
         // draw the user score to the left
         drawText(this.playerleft.score,0.25,0.2);
@@ -230,7 +230,11 @@ class Game {
 
     update(){
         if (this.frames == polling){
-            socket.emit('paddle move', this.paddle.y);
+            if(this.p1.controller == "player"){
+                socket.emit('paddle move', this.p1.paddle.y);
+            } else {
+                socket.emit('paddle move', this.p2.paddle.y);
+            }
             this.frames = 0;
         }
         this.frames++;
@@ -308,7 +312,7 @@ class Game {
         socket.emit('pause');
     }
     init(){
-        setInterval(() => this.tick(),1000/this.fps);
+        this.gameloop = setInterval(() => this.tick(),1000/this.fps);
         window.addEventListener("keydown", e => {
             if (e.keyCode === 32){
                 this.pause()
@@ -339,8 +343,10 @@ class Game {
 const socket = io();
 
 var game;
+var div;
+
 socket.on('ready', () =>{
-    let div = document.querySelector('div') 
+    div = document.querySelector('div') 
     div.innerHTML = "WAITING FOR PLAYER 2";
     socket.emit('ratio', ratio);
     console.log(ratio);
@@ -352,6 +358,10 @@ socket.on('ready', () =>{
     });
 });
 
+socket.on('disconnected', () => {
+    clearInterval(game.gameloop);
+    div.innerHTML = "OPPONENT LEFT";
+});
 
 
 

@@ -38,7 +38,7 @@ class Room {
             player.side = 'l';
             if(this.players.length == 1){
                 player.ratio = this.players[0].ratio;
-                player.side = this.players[0].ratio == 'l' ? 'l' : 'r';
+                player.side = (this.players[0].side == 'l' ? 'r' : 'l');
                 console.log(`Player ${player.id} using Ratio: ${player.ratio}`);
             }
             this.players.push(player);
@@ -74,8 +74,9 @@ io.on('connection', socket => {
         socket.broadcast.emit('score', score);
     });
     socket.on('disconnect', reason => {
-        room.removePlayer(id)
+        room.removePlayer(id);
         console.log(`Disconnected ${id}`);
+        socket.broadcast.emit('disconnected');
     });
     socket.on('ratio', ratio => {
         if(room.addPlayer(new Player(id, ratio, 'c'))){
