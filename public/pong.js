@@ -9,6 +9,7 @@ var height;
 var midx;
 var midy;
 var factor;
+var delay = 1;
 
 //pulse params
 const upper = 255;
@@ -31,6 +32,21 @@ class Ball {
         this.color; 
         this.colorList = [lower, lower, lower];
         this.rates = [3, 2, 1];
+        
+        socket.on('reset', (ball) => {
+            this.x = ball.x ;
+            this.y = ball.y;
+            this.velocityX = ball.dx;
+            this.velocityY = ball.dy;
+            this.speed = ball.spd;
+        });
+        socket.on('hit', (ball) => {
+            this.x = ball.x + ball.dx*delay;
+            this.y = ball.y + ball.dy*delay;    
+            this.velocityX = ball.dx;
+            this.velocityY = ball.dy;
+            this.speed = ball.spd;
+        });
     }
     resetBall(){
         this.x = midx;
@@ -38,7 +54,7 @@ class Ball {
         this.velocityX = startingSpeed * (Math.random() > 0.5 ? 1 : -1);
         this.velocityY = startingSpeed * (Math.random() - 0.5);
         this.speed = startingSpeed;
-        this.emitHit();
+        socket.emit('reset',  {x: this.x, y: this.y, dx: this.velocityX, dy: this.velocityY, spd: this.speed});
     }
     emitHit(){
         socket.emit('hit',  {x: this.x, y: this.y, dx: this.velocityX, dy: this.velocityY, spd: this.speed});
@@ -236,6 +252,7 @@ class Game {
                 socket.emit('paddle move', this.p2.paddle.y);
             }
             this.frames = 0;
+            //this.ball.emitHit();
         }
         this.frames++;
         if(this.ball.x - this.ball.radius < 0){
@@ -321,13 +338,6 @@ class Game {
         socket.on('pause', () => {
             this.paused  = !this.paused;
         });
-        socket.on('hit', (ball) => {
-            // this.ball.x = ball.x ;
-            // this.ball.y = ball.y;
-            this.ball.velocityX = ball.dx;
-            this.ball.velocityY = ball.dy;
-            this.ball.speed = ball.spd;
-        });
         socket.on('score', score => {
             this.p1.score = score[0];
             this.p2.score = score[1];
@@ -340,6 +350,24 @@ class Game {
     // }
 }
 
+
+function calculateDelay(n){
+    let startTimes = [];
+    let delays = [];
+    for(i = 0; i < n; i++){
+        startTimes.push(Date.now());
+        socket.emit('nudge');
+    }
+    socket.on('nudge', ()=>{
+        delays.push(Date.now()-startTimes.shift());
+        if(delays.length==n){
+            delay = 60 * delays.reduce((a, b) => a + b) / (delays.length * 1000);
+            console.log(delays);
+            console.log(`Delay of ${delay} frames`);
+        }
+    });
+}
+
 const socket = io();
 
 var game;
@@ -348,6 +376,7 @@ var div;
 socket.on('ready', () =>{
     div = document.querySelector('div') 
     div.innerHTML = "WAITING FOR PLAYER 2";
+    calculateDelay(1);
     socket.emit('ratio', ratio);
     console.log(ratio);
     socket.on('start', seat => {

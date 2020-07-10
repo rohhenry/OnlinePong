@@ -59,11 +59,17 @@ io.on('connection', socket => {
 
     socket.emit('ready');
 
+    socket.on('nudge', ()=>{
+        socket.emit('nudge');
+    });
     socket.on('paddle move', y => {
         socket.broadcast.emit('paddle move', y);
     });
     socket.on('hit', ball =>{
         socket.broadcast.emit('hit', ball);
+    });
+    socket.on('reset', ball =>{
+        socket.broadcast.emit('reset', ball);
     });
     socket.on('pause', () => {
         //console.log(`${paddle.y}`);
