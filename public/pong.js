@@ -14,7 +14,7 @@ var factor;
 const upper = 255;
 const lower = 100;
 //emit rate
-const rate = 50;
+const rate = 10;
 //ball
 const startingSpeed = 0.01;
 
@@ -29,7 +29,7 @@ class Ball {
         this.acceleration = startingSpeed/10;
         this.color; 
         this.colorList = [lower, lower, lower];
-        this.rates = [1, 2, 3];
+        this.rates = [3, 2, 1];
     }
     resetBall(){
         this.x = midx;
@@ -55,11 +55,13 @@ class Player{
         // listening to the mouse
         if(controller == 'player'){
             let lock = false;
+            //setInterval(()=> lock = !lock, rate);
             canvas.addEventListener("mousemove", evt => {
                 let rect = canvas.getBoundingClientRect();
                 this.paddle.y = (evt.clientY-rect.top)/absHeight - this.paddle.height/2;
-                if(!lock) socket.emit('paddle move', this.paddle.y);
-                setInterval(()=> lock = !lock, rate);
+                //if(!lock){
+                    socket.emit('paddle move', this.paddle.y);
+                //}
             });
         //}else if(controller == 'opponent'){
         }else if (controller == 'opponent'){
@@ -178,7 +180,7 @@ class Renderer{
         drawRect(this.paddleright.x, this.paddleright.y, this.paddleright.width, this.paddleright.height, this.paddleright.color);
         
         // draw the ball
-        drawArc(this.ball.x, this.ball.y, this.ball.radius, this.color);
+        drawArc(this.ball.x, this.ball.y, this.ball.radius, this.ball.color);
     }
 }
 // function renderCountDown(t){
