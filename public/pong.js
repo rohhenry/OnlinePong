@@ -34,8 +34,8 @@ class Ball {
         this.rates = [3, 2, 1];
         
         socket.on('reset', (ball) => {
-            this.x = ball.x ;
-            this.y = ball.y;
+            this.x = ball.x + ball.dx*delay;
+            this.y = ball.y + ball.dy*delay;
             this.velocityX = ball.dx;
             this.velocityY = ball.dy;
             this.speed = ball.spd;
