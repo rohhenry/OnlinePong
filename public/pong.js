@@ -381,7 +381,7 @@ var div;
 socket.on('ready', () =>{
     div = document.querySelector('div') 
     div.innerHTML = "WAITING FOR PLAYER 2";
-    calculateDelay(1);
+    calculateDelay(10);
     console.log(ratio);
     socket.on('start', info => {
         div.innerHTML = "";
