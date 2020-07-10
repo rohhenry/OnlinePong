@@ -332,10 +332,12 @@ const socket = io();
 
 var game;
 socket.on('ready', () =>{
-    console.log('ready');
+    let div = document.querySelector('div') 
+    div.innerHTML = "WAITING FOR PLAYER 2";
     socket.emit('ratio', ratio);
     console.log(ratio);
     socket.on('start', seat => {
+        div.innerHTML = "";
         console.log(seat.side);
         game = new Game(seat);
         game.init();
