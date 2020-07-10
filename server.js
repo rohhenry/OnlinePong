@@ -16,24 +16,48 @@ httpServer.listen(PORT, () => {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-let spots = {left: 0, right: 0};
+class Player{
+    constructor(id, ratio, side){
+        this.id = id;
+        this.ratio = ratio;
+        this.side = side; 
+    }
+}
+
+class Room {
+    constructor(){
+        this.name = "";
+        this.max_size = 2;
+        this.players = [];
+    }
+    isFull(){
+        return this.players.length >= this.max_size;
+    }
+    addPlayer(player){
+        if(!this.isFull()){
+            player.side = 'l';
+            if(this.players.length == 1){
+                player.ratio = this.players[0].ratio;
+                player.side = this.players[0].ratio == 'l' ? 'l' : 'r';
+                console.log(`Player ${player.id} using Ratio: ${player.ratio}`);
+            }
+            this.players.push(player);
+            return true;
+        }
+        return false;
+    }
+    removePlayer(id){
+        this.players = this.players.filter(p => p.id != id);
+    }
+}
+
+const room = new Room();
 
 io.on('connection', socket => {
     let id = socket.id;
     console.log(`user ${id} connected...`);
-    
-    if(spots.left && spots.right){
-        socket.disconnect();
-    }
-    if(!spots.left){
-        spots.left = id;
-        socket.emit('availiable side', 'l');
-        console.log(`Left Side Claimed by ${id}`);
-    }else if(!spots.right) {
-        spots.right = id;
-        socket.emit('availiable side', 'r');
-        console.log(`Right Side Claimed by ${id}`)
-    }
+
+    socket.emit('ready');
 
     socket.on('paddle move', y => {
         socket.broadcast.emit('paddle move', y);
@@ -46,18 +70,30 @@ io.on('connection', socket => {
         socket.broadcast.emit('pause');
         socket.emit('pause');
     });
-    socket.on('score', (score) => {
+    socket.on('score', score => {
         socket.broadcast.emit('score', score);
     });
     socket.on('disconnect', reason => {
-        if (spots.left == id){
-            spots.left = 0;
-            console.log("Left Side Disconnected");
-        }else if (spots.right == id){
-            spots.right = 0;
-            console.log("Right Side Disconnected");
-        }
+        room.removePlayer(id)
+        console.log(`Disconnected ${id}`);
     });
+    socket.on('ratio', ratio => {
+        if(room.addPlayer(new Player(id, ratio, 'c'))){
+            console.log(`Player ${id} joined`)
+            console.log(room.players.length);
+            console.log(room.isFull());
+            if(room.isFull()){
+                console.log("Game Starting");
+                socket.emit("start", room.players[1]);
+                socket.broadcast.emit("start", room.players[0]);
+                console.log(room.players[0]);
+                console.log(room.players[1]);
+            }
+        }else{
+            console.log("No more Room");
+            socket.disconnect();
+        }
+    })
 });
 
 
