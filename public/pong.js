@@ -322,8 +322,8 @@ class Game {
             this.paused  = !this.paused;
         });
         socket.on('hit', (ball) => {
-            this.ball.x = ball.x ;
-            this.ball.y = ball.y;
+            // this.ball.x = ball.x ;
+            // this.ball.y = ball.y;
             this.ball.velocityX = ball.dx;
             this.ball.velocityY = ball.dy;
             this.ball.speed = ball.spd;
