@@ -17,10 +17,11 @@ httpServer.listen(PORT, () => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 class Player{
-    constructor(id, ratio, side){
+    constructor(id, ratio, side, delay){
         this.id = id;
         this.ratio = ratio;
         this.side = side; 
+        this.delay = delay;
     }
 }
 
@@ -84,15 +85,17 @@ io.on('connection', socket => {
         console.log(`Disconnected ${id}`);
         socket.broadcast.emit('disconnected');
     });
-    socket.on('ratio', ratio => {
-        if(room.addPlayer(new Player(id, ratio, 'c'))){
+
+    socket.on('info', info => {
+        if(room.addPlayer(new Player(id, info.ratio, 'c', info.delay))){
             console.log(`Player ${id} joined`)
             console.log(room.players.length);
             console.log(room.isFull());
             if(room.isFull()){
                 console.log("Game Starting");
-                socket.emit("start", room.players[1]);
-                socket.broadcast.emit("start", room.players[0]);
+                const totalDelay = room.players[0].delay + room.players[1].delay;
+                socket.emit("start", {delay: totalDelay,  seat: room.players[1]});
+                socket.broadcast.emit("start", {delay: totalDelay,  seat: room.players[0]});
                 console.log(room.players[0]);
                 console.log(room.players[1]);
             }

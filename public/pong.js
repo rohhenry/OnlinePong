@@ -16,7 +16,7 @@ const upper = 255;
 const lower = 100;
 //emit rate
 const rate = 10;
-const polling = 4;
+const polling = 1;
 //ball
 const startingSpeed = 0.01;
 
@@ -245,7 +245,7 @@ class Game {
     }
 
     update(){
-        if (this.frames == polling){
+        if (this.frames == 3){
             if(this.p1.controller == "player"){
                 socket.emit('paddle move', this.p1.paddle.y);
             } else {
@@ -356,7 +356,7 @@ class Game {
 }
 
 
-function calculateDelay(n){
+function calculateDelay(n, callback){
     let startTimes = [];
     let delays = [];
     for(i = 0; i < n; i++){
@@ -367,8 +367,8 @@ function calculateDelay(n){
         delays.push(Date.now()-startTimes.shift());
         if(delays.length==n){
             delay = 60 * delays.reduce((a, b) => a + b) / (delays.length * 1000);
+            socket.emit('info', {delay: delay, ratio: ratio});
             console.log(delays);
-            console.log(`Delay of ${delay} frames`);
         }
     });
 }
@@ -382,12 +382,13 @@ socket.on('ready', () =>{
     div = document.querySelector('div') 
     div.innerHTML = "WAITING FOR PLAYER 2";
     calculateDelay(1);
-    socket.emit('ratio', ratio);
     console.log(ratio);
-    socket.on('start', seat => {
+    socket.on('start', info => {
         div.innerHTML = "";
-        console.log(seat.side);
-        game = new Game(seat);
+        console.log(info.seat.side);
+        delay = info.delay;
+        console.log(`Delay of ${delay} frames`);
+        game = new Game(info.seat);
         game.init();
     });
 });
