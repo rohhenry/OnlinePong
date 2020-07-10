@@ -270,7 +270,7 @@ class Game {
         let closer = (this.ball.x  < midx) ? this.p1 : this.p2;
         
         // if the this.ball hits a paddle
-        if(collision(this.ball,closer.paddle)){
+        if(closer.controller == 'player' && collision(this.ball,closer.paddle)){
             // we check where the this.ball hits the paddle
             let collidePoint = (this.ball.y - (closer.paddle.y + closer.paddle.height/2));
             // normalize the value of collidePoint, we need to get numbers between -1 and 1.
@@ -291,7 +291,7 @@ class Game {
             // speed up the this.ball everytime a paddle hits it.
             this.ball.speed += this.ball.acceleration;
 
-            if(closer.controller == 'player') this.ball.emitHit();
+            this.ball.emitHit();
         }
     }
 
