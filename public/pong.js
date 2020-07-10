@@ -72,7 +72,7 @@ class Player{
 
 class Paddle {
     constructor(side){
-        this.width = 0.01*width;
+        this.width = 0.04*width;
         this.height = 0.3*height;
         if(side == "l"){
             this.x = 0;
