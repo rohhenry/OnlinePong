@@ -1,7 +1,10 @@
 const canvas = document.querySelector("#pong");
 const ctx = canvas.getContext('2d');
-canvas.width  = window.innerWidth;
-canvas.height = window.innerHeight;
+const height = window.innerWidth;
+const width = window.innerHeight;
+const ratio = width/height;
+canvas.width  = height;
+canvas.height = width;
 
 //pulse params
 const upper = 255;
@@ -27,7 +30,11 @@ class Ball {
         this.velocityX = startingSpeed * (Math.random() > 0.5 ? 1 : -1);
         this.velocityY = startingSpeed * (Math.random() - 0.5);
         this.speed = startingSpeed;
-        socket.emit('hit', {x: this.x, y: this.y, dx: this.velocityX, dy: this.velocityY, spd: this.speed});
+        //socket.emit('hit', {x: this.x, y: this.y, dx: this.velocityX, dy: this.velocityY, spd: this.speed});
+        socket.emit('hit', this.getRelative());
+    }
+    getRelative(){
+        return {x: this.x/width, y: this.y/height, dx: this.velocityX/width, dy: this.velocityY/width, spd: this.speed/(width*height)}
     }
 }
 
@@ -148,7 +155,7 @@ function renderGame(p1, p2, user, com, ball){
     pulse(user);
     pulse(com);
     // clear the canvas
-    drawRect(0, 0, canvas.width, canvas.height, "#000");
+    drawRect(0, 0, canvas.width, canvas.height, "rgba(0,0,0,0.3)");
     
     // draw the user score to the left
     drawText(p1.score,canvas.width/4,canvas.height/5);
@@ -258,7 +265,7 @@ class Game {
             // speed up the this.ball everytime a paddle hits it.
             this.ball.speed += 1;
 
-            if(closer.controller == 'player') socket.emit('hit', {x: this.ball.x, y: this.ball.y, dx: this.ball.velocityX, dy: this.ball.velocityY, spd: this.ball.speed});
+            if(closer.controller == 'player') socket.emit('hit', this.ball.getRelative());
         }
     }
 
@@ -279,11 +286,11 @@ class Game {
             this.paused  = !this.paused;
         });
         socket.on('hit', (ball) => {
-            this.ball.x = ball.x;
-            this.ball.y = ball.y;
-            this.ball.velocityX = ball.dx;
-            this.ball.velocityY = ball.dy;
-            this.ball.speed = ball.spd;
+            this.ball.x = ball.x * width;
+            this.ball.y = ball.y * height;
+            this.ball.velocityX = ball.dx * width;
+            this.ball.velocityY = ball.dy * height;
+            this.ball.speed = ball.spd * width * height;
         });
         socket.on('score', side => {
             if(side == this.p1.side){
