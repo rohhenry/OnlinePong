@@ -366,7 +366,7 @@ function calculateDelay(n, callback){
     socket.on('nudge', ()=>{
         delays.push(Date.now()-startTimes.shift());
         if(delays.length==n){
-            delay = 60 * delays.reduce((a, b) => a + b) / (delays.length * 1000);
+            delay = 60 * delays.reduce((a, b) => a + b) / (delays.length * 1000 * 2);
             socket.emit('info', {delay: delay, ratio: ratio});
             console.log(delays);
         }
