@@ -73,9 +73,12 @@ io.on('connection', socket => {
         socket.broadcast.emit('reset', ball);
     });
     socket.on('pause', () => {
-        //console.log(`${paddle.y}`);
         socket.broadcast.emit('pause');
         socket.emit('pause');
+    });
+    socket.on('resume', ()=>{
+        socket.broadcast.emit('resume');
+        socket.emit('resume');
     });
     socket.on('score', score => {
         socket.broadcast.emit('score', score);

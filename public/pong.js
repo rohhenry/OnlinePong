@@ -134,10 +134,10 @@ function drawArc(x, y, r, color){
     ctx.fill();
 }
 
-function drawText(text,x,y){
-    //ctx.fillStyle = "#FFF";
-    //ctx.font = "1px fantasy";
-    //ctx.fillText(text, x, y);
+function drawText(text,size,x,y){
+    ctx.fillStyle = "#FFF";
+    ctx.font = `${size/factor}px Arial`;
+    ctx.fillText(text, x, y);
 }
 
 // collision detection
@@ -173,19 +173,17 @@ class Renderer{
     }
     render(){
         pulse(this.ball);
-        pulse(this.paddleleft);
+        pulse(this.paddleleft); 
         pulse(this.paddleright);
         // clear the canvas
-        drawRect(0, 0, width, height, "rgba(0,0,0,255)");
+        drawRect(0, 0, width, height, "rgba(0,0,0,1)");
         
         // draw the user score to the left
-        drawText(this.playerleft.score,0.25,0.2);
+        drawText(this.playerleft.score,12,0.25, midy);
         
         // draw the COM score to the right
-        drawText(this.playerright.score,0.75,0.2);
-    
-        drawText("Space = Pause", 0.5, 0.9);
-        
+        drawText(this.playerright.score,12, 0.75, midy);
+            
         // draw the net
         //drawNet();
         
@@ -213,7 +211,7 @@ class Renderer{
 class Game {
     constructor(seat){
         this.fps = 60;
-        this.paused = true;
+        this.paused = false;
         this.frames = 0;
 
         this.side = seat.side;
@@ -236,12 +234,11 @@ class Game {
     }
 
     tick(){
-        if(!this.paused) {
+        // if(!this.paused) {
             this.renderer.render();   
             this.update(); 
-        }else{
-            drawText("PAUSED", 0.5, 0.5)
-        }
+            if(!this.paused) window.requestAnimationFrame(()=>this.tick());
+        // }
     }
 
     update(){
@@ -255,6 +252,7 @@ class Game {
             //this.ball.emitHit();
         }
         this.frames++;
+        //if scored on emit the point and reset the ball
         if(this.ball.x - this.ball.radius < 0){
             if(this.p1.controller == 'player'){
                 this.p2.score++;
@@ -270,11 +268,11 @@ class Game {
         }
 
         if(this.p1.score == 3 || this.p2.score === 3){
-            this.game_over = true;
+            //this.game_over = true;
             //this.pause();
 
-            this.p1.score = 0;
-            this.p2.score = 0;
+            // this.p1.score = 0;
+            // this.p2.score = 0;
         }
     
         
@@ -328,30 +326,55 @@ class Game {
     }
 
     pause(){
-        if(this.game_over){
-            this.game_over = false;
-        }
-        socket.emit('pause');
+        //drawText('PAUSED', 12, 0.5, 0.5);
+        this.paused = true;
+        //clearInterval(this.gameloop);    
     }
+    resume(){
+        this.paused = false;
+        //this.gameloop = setInterval(() => this.tick(),1000/this.fps);
+        window.requestAnimationFrame(()=>this.tick());
+    }
+
+    keydownHandler(evt) {
+        if (evt.keyCode === 32){
+            if(this.game.paused){
+                socket.emit('resume');
+            }else{
+                socket.emit('pause');
+            }
+        } 
+    }
+
     init(){
-        this.gameloop = setInterval(() => this.tick(),1000/this.fps);
-        window.addEventListener("keydown", e => {
-            if (e.keyCode === 32){
-                this.pause()
-            } 
-        });
-        socket.on('pause', () => {
-            this.paused  = !this.paused;
-        });
+       // this.gameloop = setInterval(() => this.tick(),1000/this.fps);
+        this.pause();
+        window.requestAnimationFrame(()=>this.tick());
+        //drawText("Paused Press SPACE to start", 0.1*height, 0.3*width, 0.5*height);
+
+        window.addEventListener("keydown", this.keydownHandler);
+        
+        socket.on('pause', ()=>this.pause());
+        socket.on('resume', ()=>this.resume());
         socket.on('score', score => {
             this.p1.score = score[0];
             this.p2.score = score[1];
         });
+
         if(this.p1.controller == 'player') this.ball.resetBall();
     }
 
+    terminate(){
+        window.removeEventListener('keydown', this.keydownHandler);
+
+        socket.off('score');
+        socket.off('pause');
+        socket.off('resume');
+        
+    }
+
     // start(){
-    //     renderCountDown.bind(this)(3);
+    //     renderCountDown.bin)d(this)(3);
     // }
 }
 
@@ -374,13 +397,13 @@ function calculateDelay(n, callback){
 }
 
 const socket = io();
-
 var game;
 var div;
 
 socket.on('ready', () =>{
     div = document.querySelector('div') 
     div.innerHTML = "WAITING FOR PLAYER 2";
+    
     calculateDelay(10);
     console.log(ratio);
     socket.on('start', info => {
@@ -394,8 +417,9 @@ socket.on('ready', () =>{
 });
 
 socket.on('disconnected', () => {
-    clearInterval(game.gameloop);
-    div.innerHTML = "OPPONENT LEFT";
+    game.pause();
+    game.terminate();
+    div.innerHTML = "Opponent Left";
 });
 
 
