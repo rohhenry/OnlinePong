@@ -379,17 +379,20 @@ class Game {
 }
 
 
-function calculateDelay(n, callback){
+function calculateDelay(n){
     let startTimes = [];
     let delays = [];
+    let overhead = Date.now();
     for(i = 0; i < n; i++){
         startTimes.push(Date.now());
         socket.emit('nudge');
     }
+    overhead = (Date.now() - overhead)/n;
+    console.log(`overhead: ${overhead}ms`);
     socket.on('nudge', ()=>{
         delays.push(Date.now()-startTimes.shift());
         if(delays.length==n){
-            delay = 60 * delays.reduce((a, b) => a + b) / (delays.length * 1000 * 2);
+            delay = (60 * delays.reduce((a, b) => a + b) / (delays.length * 1000 * 2))-overhead;
             socket.emit('info', {delay: delay, ratio: ratio});
             console.log(delays);
         }
@@ -409,7 +412,7 @@ socket.on('ready', () =>{
     socket.on('start', info => {
         div.innerHTML = "";
         console.log(info.seat.side);
-        delay = info.delay;
+        delay = Math.round(info.delay);
         console.log(`Delay of ${delay} frames`);
         game = new Game(info.seat);
         game.init();
