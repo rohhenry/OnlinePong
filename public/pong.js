@@ -387,12 +387,12 @@ function calculateDelay(n){
         startTimes.push(Date.now());
         socket.emit('nudge');
     }
-    overhead = (Date.now() - overhead)/n;
-    console.log(`overhead: ${overhead}ms`);
+    overhead = Date.now() - overhead;
+    // console.log(`overhead: ${overhead}ms`);
     socket.on('nudge', ()=>{
         delays.push(Date.now()-startTimes.shift());
         if(delays.length==n){
-            delay = (60 * delays.reduce((a, b) => a + b) / (delays.length * 1000 * 2))-overhead;
+            delay = (60 * (delays.reduce((a, b) => a + b)-2*overhead)/ (delays.length * 1000 * 2));
             socket.emit('info', {delay: delay, ratio: ratio});
             console.log(delays);
         }
@@ -407,11 +407,10 @@ socket.on('ready', () =>{
     div = document.querySelector('div') 
     div.innerHTML = "WAITING FOR PLAYER 2";
     
-    calculateDelay(10);
-    console.log(ratio);
+    calculateDelay(100);
     socket.on('start', info => {
         div.innerHTML = "";
-        console.log(info.seat.side);
+        console.log(`Starting ${info.seat.side} Side`);
         delay = Math.round(info.delay);
         console.log(`Delay of ${delay} frames`);
         game = new Game(info.seat);
