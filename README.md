@@ -1,7 +1,7 @@
 # OnlinePong
-Pong but online
+Pong but online.
 
-https://stark-castle-77265.herokuapp.com/pong.html
+Play Here: https://stark-castle-77265.herokuapp.com/pong.html
 
 Controls:
 
